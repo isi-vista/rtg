@@ -407,6 +407,15 @@ class Decoder:
                 in_seq.append(self.eos_val)
         else:
             in_seq = self.inp_vocab.encode_as_ids(line, add_eos=True, add_bos=add_bos)
+
+        max_src_len = args.get("max_src_len", 0)
+        if max_src_len > 0 and len(in_seq) > max_src_len:
+            log.warning(f"Line full length={len(in_seq)} ; truncated to {max_src_len}")
+            # careful to preseve eos token; hmm, not done in batch mode??
+            last = in_seq[-1]
+            in_seq = in_seq[:max_src_len]
+            in_seq[-1] = last
+
         in_seqs = tensor(in_seq, dtype=torch.long).view(1, -1)
         in_lens = tensor([len(in_seq)], dtype=torch.long)
         if self.debug:

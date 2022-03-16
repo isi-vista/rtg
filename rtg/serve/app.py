@@ -85,6 +85,13 @@ def attach_translate_route(cli_args):
     global exp, src_prep, tgt_postp
     exp = Experiment(cli_args.pop("exp_dir"), read_only=True)
     dec_args = exp.config.get("decoder") or exp.config["tester"].get("decoder", {})
+    dec_args["max_src_len"] = cli_args.get("max_src_len", 0)
+    beam_size = cli_args.get("beam_size")
+    if beam_size:
+        dec_args["beam_size"] = beam_size
+    max_len = cli_args.get("max_len")
+    if max_len:
+        dec_args["max_len"] = max_len
     decoder = Decoder.new(exp, ensemble=dec_args.pop("ensemble", 1))
     src_prep = exp.get_pre_transform(side='src')
     tgt_prep = exp.get_pre_transform(side='tgt')
@@ -163,6 +170,10 @@ def parse_args():
     parser.add_argument("-b", "--base", help="Base prefix path for all the URLs")
     parser.add_argument("-msl", "--max-src-len", type=int, default=250,
                         help="max source len; longer seqs will be truncated")
+    parser.add_argument("--beam-size", type=int,
+                        help="beam size; default from model config")
+    parser.add_argument("--max-len", type=int,
+                        help="tokens past src length in beam?; default from model config")
     args = vars(parser.parse_args())
     return args
 
